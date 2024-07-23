@@ -1,31 +1,43 @@
-$('.search-button').on('click', function(){
-    $.ajax({
-        url: 'http://www.omdbapi.com/?apikey=76a9a7b5&s=' + $('.input-keyword').val(),
-        success: results => {
-            const movies = results.Search;
-            let cards = '';
-            movies.forEach(m => {
-                cards += showCards(m);
-            });
-            $('.movie-container').html(cards);
-            $('.modal-detail-button').on('click', function(){
-                $.ajax({
-                    url: 'http://www.omdbapi.com/?apikey=76a9a7b5&i=' + $(this).data('imdbid'),
-                    success: m => {
-                        const movieDetail = showMovieDetail(m);
-                        $('.modal-body').html(movieDetail);
-                    },
-                    error: e => {
-                        console.log(e.responseText);
-                    }
-                });
-            });
-        },
-        error: (e) => {
-            console.log(e.responseText);
-        }
-    });
+const searchBtn = document.querySelector('.search-button');
+
+searchBtn.addEventListener('click',async function(){
+    const inputKeyword = document.querySelector('.input-keyword');
+    const movies = await getMovies(inputKeyword.value);
+    updateUI(movies);
 });
+
+document.addEventListener('click',async function(e){
+    if(e.target.classList.contains('modal-detail-button')){
+        const imdbID = e.target.dataset.imdbid;
+        const movieDetail = await getMovieDetai(imdbID);
+        updateUIDetail(movieDetail);
+    }
+});
+
+function getMovieDetai(imdbID){
+    return fetch('http://www.omdbapi.com/?apikey=76a9a7b5&i=' + imdbID)
+        .then(response => response.json())
+        .then(m => m);
+}
+
+function updateUIDetail(m){
+    const movieDetail = showMovieDetail(m);
+    const modalBody = document.querySelector('.modal-body');
+    modalBody.innerHTML = movieDetail;
+}
+
+function getMovies(keyword){
+    return fetch('http://www.omdbapi.com/?apikey=76a9a7b5&s=' + keyword)
+        .then(response => response.json())
+        .then(response => response.Search)
+}
+
+function updateUI(movies){
+    let cards = '';
+    movies.forEach(m => cards += showCards(m));
+    const movieContainer = document.querySelector('.movie-container');
+    movieContainer.innerHTML = cards;
+}
 
 
 function showCards(m){
